@@ -43,6 +43,21 @@ async function delete_(id: string): Promise<User> {
   });
 }
 
+async function deleteAllUsers(): Promise<void> {
+  await db.user.deleteMany({});
+}
+
+async function insertMultiple(
+  users: UserCreateInput[] | readonly UserCreateInput[],
+): Promise<User[]> {
+  const createdUsers: User[] = [];
+  for (const user of users) {
+    const created = await add(user);
+    createdUsers.push(created);
+  }
+  return createdUsers;
+}
+
 export default {
   getAll,
   getOne,
@@ -51,4 +66,6 @@ export default {
   add,
   update,
   delete: delete_,
+  deleteAllUsers,
+  insertMultiple,
 } as const;

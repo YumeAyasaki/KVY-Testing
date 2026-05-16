@@ -1,8 +1,8 @@
 import { Prisma, Seller } from '../../generated/prisma/client';
 import db from './BaseRepo';
 
-type SellerCreateInput = Prisma.SellerCreateInput;
-type SellerUpdateInput = Prisma.SellerUpdateInput;
+export type SellerCreateInput = Prisma.SellerCreateInput;
+export type SellerUpdateInput = Prisma.SellerUpdateInput;
 
 async function getAll(): Promise<Seller[]> {
   return db.seller.findMany();

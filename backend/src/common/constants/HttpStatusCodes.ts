@@ -1,9 +1,7 @@
-
 /******************************************************************************
                                 Constants
 ******************************************************************************/
-
-import { ValueOf } from "../types/structure-utils";
+import { ValueOf } from '../types/structure-utils';
 
 /**
  * Hypertext Transfer Protocol (HTTP) response status codes.

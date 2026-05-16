@@ -1,8 +1,12 @@
-import { Document, DocumentStatus, Prisma } from '../../generated/prisma/client';
+import {
+  Document,
+  DocumentStatus,
+  Prisma,
+} from '../../generated/prisma/client';
 import db from './BaseRepo';
 
-type DocumentCreateInput = Prisma.DocumentUncheckedCreateInput;
-type DocumentUpdateInput = Prisma.DocumentUncheckedUpdateInput;
+export type DocumentCreateInput = Prisma.DocumentUncheckedCreateInput;
+export type DocumentUpdateInput = Prisma.DocumentUncheckedUpdateInput;
 
 type DocumentStatusType = DocumentStatus;
 
@@ -38,7 +42,10 @@ async function add(data: DocumentCreateInput): Promise<Document> {
   });
 }
 
-async function update(id: string, data: DocumentUpdateInput): Promise<Document> {
+async function update(
+  id: string,
+  data: DocumentUpdateInput,
+): Promise<Document> {
   return db.document.update({
     where: { id },
     data,

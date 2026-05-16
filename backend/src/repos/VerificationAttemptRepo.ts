@@ -1,8 +1,10 @@
 import { Prisma, VerificationAttempt } from '../../generated/prisma/client';
 import db from './BaseRepo';
 
-type VerificationAttemptCreateInput = Prisma.VerificationAttemptUncheckedCreateInput;
-type VerificationAttemptUpdateInput = Prisma.VerificationAttemptUncheckedUpdateInput;
+export type VerificationAttemptCreateInput =
+  Prisma.VerificationAttemptUncheckedCreateInput;
+export type VerificationAttemptUpdateInput =
+  Prisma.VerificationAttemptUncheckedUpdateInput;
 
 async function getAll(): Promise<VerificationAttempt[]> {
   return db.verificationAttempt.findMany();
@@ -14,7 +16,9 @@ async function getOne(id: string): Promise<VerificationAttempt | null> {
   });
 }
 
-async function getByDocumentId(documentId: string): Promise<VerificationAttempt[]> {
+async function getByDocumentId(
+  documentId: string,
+): Promise<VerificationAttempt[]> {
   return db.verificationAttempt.findMany({
     where: { documentId },
   });
@@ -24,13 +28,18 @@ async function persists(id: string): Promise<boolean> {
   return (await getOne(id)) !== null;
 }
 
-async function add(data: VerificationAttemptCreateInput): Promise<VerificationAttempt> {
+async function add(
+  data: VerificationAttemptCreateInput,
+): Promise<VerificationAttempt> {
   return db.verificationAttempt.create({
     data,
   });
 }
 
-async function update(id: string, data: VerificationAttemptUpdateInput): Promise<VerificationAttempt> {
+async function update(
+  id: string,
+  data: VerificationAttemptUpdateInput,
+): Promise<VerificationAttempt> {
   return db.verificationAttempt.update({
     where: { id },
     data,

@@ -1,72 +1,59 @@
-import { isNonEmptyString, isString, isUnsignedInteger } from 'jet-validators';
+import { isNonEmptyString, isString } from 'jet-validators';
 import { parseObject, Schema, testObject } from 'jet-validators/utils';
 
-import { transformIsDate } from '@src/common/utils/validators';
+import { DocumentStatus } from '../../generated/prisma/client';
 
-import { Entity } from './common/types';
+function isDocumentStatus(value: unknown): value is DocumentStatus {
+  return (
+    value === DocumentStatus.PENDING_UPLOAD ||
+    value === DocumentStatus.SUBMITTED ||
+    value === DocumentStatus.PENDING_VERIFICATION ||
+    value === DocumentStatus.APPROVED ||
+    value === DocumentStatus.REJECTED ||
+    value === DocumentStatus.INCONCLUSIVE
+  );
+}
 
-/******************************************************************************
-                                 Constants
-******************************************************************************/
+export interface IDocument {
+  id?: string;
+  sellerId: string;
+  fileUrl: string;
+  status?: DocumentStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 const GetDefaults = (): IDocument => ({
-  id: 0,
-  name: '',
-  email: '',
-  created: new Date(),
+  sellerId: '',
+  fileUrl: '',
+  status: DocumentStatus.PENDING_UPLOAD,
 });
 
 const schema: Schema<IDocument> = {
-  id: isUnsignedInteger,
-  name: isString,
-  email: isString,
-  created: transformIsDate,
+  sellerId: isString,
+  fileUrl: isString,
+  status: (value: unknown): value is DocumentStatus | undefined =>
+    typeof value === 'undefined' || isDocumentStatus(value),
 };
 
-/******************************************************************************
-                                  Types
-******************************************************************************/
+const parseDocument = parseObject<IDocument>(schema);
 
-/**
- * @entity users
- */
-export interface IDocument extends Entity {
-  name: string;
-  email: string;
-}
-
-/******************************************************************************
-                                  Setup
-******************************************************************************/
-
-// Set the "parseUser" function
-const parseUser = parseObject<IDocument>(schema);
-
-// For the APIs make sure the right fields are complete
-const isCompleteUser = testObject<IDocument>({
-  ...schema,
-  name: isNonEmptyString,
-  email: isNonEmptyString,
+const isCompleteDocument = testObject<IDocument>({
+  sellerId: isNonEmptyString,
+  fileUrl: isNonEmptyString,
+  status: (value: unknown): value is DocumentStatus | undefined =>
+    typeof value === 'undefined' || isDocumentStatus(value),
 });
 
-/******************************************************************************
-                                 Functions
-******************************************************************************/
-
-/**
- * New user object.
- */
-function new_(user?: Partial<IDocument>): IDocument {
-  return parseUser({ ...GetDefaults(), ...user }, (errors) => {
-    throw new Error('Setup new user failed ' + JSON.stringify(errors, null, 2));
+function new_(document?: Partial<IDocument>): IDocument {
+  return parseDocument({ ...GetDefaults(), ...document }, (errors) => {
+    throw new Error(
+      'Setup new document failed ' + JSON.stringify(errors, null, 2),
+    );
   });
 }
 
-/******************************************************************************
-                                Export default
-******************************************************************************/
-
 export default {
   new: new_,
-  isComplete: isCompleteUser,
+  isComplete: isCompleteDocument,
 } as const;
