@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DocumentStatus {
+  PENDING_UPLOAD
+  SUBMITTED
+  PENDING_VERIFICATION
+  APPROVED
+  REJECTED
+  INCONCLUSIVE
+}
+
+enum Role {
+  ADMIN
+  SELLER
+}
+
+model User {
+  id          String      @id @default(uuid())
+  username    String
+  password    String
+  Role        Role        @default(SELLER)
+}
+
+model Seller {
+  id          String     @id @default(uuid())
+  email       String     @unique
+  companyName String
+  documents   Document[]
+  createdAt   DateTime   @default(now())
+}
+
+model Document {
+  id         String             @id @default(uuid())
+  sellerId   String
+  seller     Seller             @relation(fields: [sellerId], references: [id])
+  fileUrl    String
+  status     DocumentStatus     @default(PENDING_UPLOAD)
+  attempts   VerificationAttempt[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model VerificationAttempt {
+  id             String         @id @default(uuid())
+  documentId     String
+  document       Document       @relation(fields: [documentId], references: [id])
+  providerStatus String?        // "verified", "rejected", "inconclusive"
+  adminId        String?        // Nullable if automated
+  adminDecision  String?        // "APPROVED" or "REJECTED"
+  reason         String?        // Optional rejection/approval details
+  createdAt      DateTime       @default(now())
+}

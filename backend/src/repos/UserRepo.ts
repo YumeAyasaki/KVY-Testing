@@ -1,131 +1,54 @@
-import { getRandomInt } from '@src/common/utils/number-utils';
-import { IUser } from '@src/models/User.model';
+import { Prisma, User } from '../../generated/prisma/client';
+import db from './BaseRepo';
 
-import orm from './MockOrm';
+export type UserCreateInput = Prisma.UserCreateInput;
+export type UserUpdateInput = Prisma.UserUpdateInput;
 
-/******************************************************************************
-                                Functions
-******************************************************************************/
-
-/**
- * Get one user.
- */
-async function getOne(email: string): Promise<IUser | null> {
-  const db = await orm.openDb();
-  for (const user of db.users) {
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
+async function getAll(): Promise<User[]> {
+  return db.user.findMany();
 }
 
-/**
- * See if a user with the given id exists.
- */
-async function persists(id: number): Promise<boolean> {
-  const db = await orm.openDb();
-  for (const user of db.users) {
-    if (user.id === id) {
-      return true;
-    }
-  }
-  return false;
+async function getOne(id: string): Promise<User | null> {
+  return db.user.findUnique({
+    where: { id },
+  });
 }
 
-/**
- * Get all users.
- */
-async function getAll(): Promise<IUser[]> {
-  const db = await orm.openDb();
-  return db.users;
+async function getByUsername(username: string): Promise<User | null> {
+  return db.user.findFirst({
+    where: { username },
+  });
 }
 
-/**
- * Add one user.
- */
-async function add(user: IUser): Promise<void> {
-  const db = await orm.openDb();
-  user.id = getRandomInt();
-  db.users.push(user);
-  return orm.saveDb(db);
+async function persists(id: string): Promise<boolean> {
+  return (await getOne(id)) !== null;
 }
 
-/**
- * Update a user.
- */
-async function update(user: IUser): Promise<void> {
-  const db = await orm.openDb();
-  for (let i = 0; i < db.users.length; i++) {
-    if (db.users[i].id === user.id) {
-      const dbUser = db.users[i];
-      db.users[i] = {
-        ...dbUser,
-        name: user.name,
-        email: user.email,
-      };
-      return orm.saveDb(db);
-    }
-  }
+async function add(data: UserCreateInput): Promise<User> {
+  return db.user.create({
+    data,
+  });
 }
 
-/**
- * Delete one user.
- */
-async function delete_(id: number): Promise<void> {
-  const db = await orm.openDb();
-  for (let i = 0; i < db.users.length; i++) {
-    if (db.users[i].id === id) {
-      db.users.splice(i, 1);
-      return orm.saveDb(db);
-    }
-  }
+async function update(id: string, data: UserUpdateInput): Promise<User> {
+  return db.user.update({
+    where: { id },
+    data,
+  });
 }
 
-// **** Unit-Tests Only **** //
-
-/**
- * @testOnly
- *
- * Delete every user record.
- */
-async function deleteAllUsers(): Promise<void> {
-  const db = await orm.openDb();
-  db.users = [];
-  return orm.saveDb(db);
+async function delete_(id: string): Promise<User> {
+  return db.user.delete({
+    where: { id },
+  });
 }
-
-/**
- * @testOnly
- *
- * Insert multiple users. Can't do multiple at once cause using a plain file
- * for now.
- */
-async function insertMultiple(
-  users: IUser[] | readonly IUser[],
-): Promise<IUser[]> {
-  const db = await orm.openDb(),
-    usersF = [...users];
-  for (const user of usersF) {
-    user.id = getRandomInt();
-    user.created = new Date();
-  }
-  db.users = [...db.users, ...users];
-  await orm.saveDb(db);
-  return usersF;
-}
-
-/******************************************************************************
-                                Export default
-******************************************************************************/
 
 export default {
-  getOne,
-  persists,
   getAll,
+  getOne,
+  getByUsername,
+  persists,
   add,
   update,
   delete: delete_,
-  deleteAllUsers,
-  insertMultiple,
 } as const;
