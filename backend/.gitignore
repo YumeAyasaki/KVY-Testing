@@ -5,3 +5,4 @@ tsconfig.tsbuildinfo
 
 /generated/prisma
 .env
+src/public/uploads/*

@@ -22,10 +22,11 @@ const Paths = {
       _: '/documents',
       Get: '/all',
       GetById: '/:id',
+      Add: '/add',
       Update: '/update',
     },
     Attempts: {
-      _: '/verification-attempts',
+      _: '/verificationattempts',
       Add: '/add',
       GetByDocument: '/document/:documentId',
     },

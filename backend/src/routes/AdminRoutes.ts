@@ -92,6 +92,27 @@ async function updateDocument(req: Req, res: Res) {
   res.status(HttpStatusCodes.OK).end();
 }
 
+async function addDocument(req: Req, res: Res) {
+  const body = req.body as { sellerId?: string };
+  const file = (req as Req & { file?: { filename: string } }).file;
+
+  if (!body.sellerId || !file) {
+    return res
+      .status(HttpStatusCodes.BAD_REQUEST)
+      .json({ error: 'sellerId and file are required' });
+  }
+
+  const fileUrl = `/uploads/${file.filename}`;
+
+  await VerificationService.addDocument({
+    sellerId: body.sellerId.trim(),
+    fileUrl,
+    status: DocumentStatus.SUBMITTED,
+  });
+
+  res.status(HttpStatusCodes.CREATED).json({ fileUrl });
+}
+
 async function addVerificationAttempt(req: Req, res: Res) {
   const { attempt } = reqValidators.addAttempt(req.body) as {
     attempt: {
@@ -107,9 +128,7 @@ async function addVerificationAttempt(req: Req, res: Res) {
 }
 
 async function getAttemptsByDocument(req: Req, res: Res) {
-  const { documentId } = reqValidators.getByDocument(req.params) as {
-    documentId: string;
-  };
+  const { documentId } = reqValidators.getByDocument(req.params);
   const attempts = await VerificationService.getAttemptsByDocument(documentId);
   res.status(HttpStatusCodes.OK).json({ attempts });
 }
@@ -117,6 +136,7 @@ async function getAttemptsByDocument(req: Req, res: Res) {
 export default {
   getAllDocuments,
   getDocumentById,
+  addDocument,
   updateDocument,
   addVerificationAttempt,
   getAttemptsByDocument,

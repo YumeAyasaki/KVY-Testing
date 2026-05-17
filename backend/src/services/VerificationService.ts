@@ -1,4 +1,4 @@
-import DocumentRepo, { DocumentUpdateInput } from '@src/repos/DocumentRepo';
+import DocumentRepo, { DocumentCreateInput, DocumentUpdateInput } from '@src/repos/DocumentRepo';
 import VerificationAttemptRepo, {
   VerificationAttemptCreateInput,
 } from '@src/repos/VerificationAttemptRepo';
@@ -15,6 +15,10 @@ async function updateDocument(id: string, data: DocumentUpdateInput) {
   return DocumentRepo.update(id, data);
 }
 
+async function addDocument(data: DocumentCreateInput) {
+  return DocumentRepo.add(data);
+}
+
 async function addVerificationAttempt(data: VerificationAttemptCreateInput) {
   return VerificationAttemptRepo.add(data);
 }
@@ -27,6 +31,7 @@ export default {
   getAllDocuments,
   getDocument,
   updateDocument,
+  addDocument,
   addVerificationAttempt,
   getAttemptsByDocument,
 } as const;
