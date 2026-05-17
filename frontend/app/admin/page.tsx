@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getToken, getPayload } from "../lib/auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 const STATUS_OPTIONS = [
@@ -33,7 +35,10 @@ export default function AdminPage() {
     setMessage("");
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/documents/all`);
+      const token = getToken();
+      const response = await fetch(`${API_BASE_URL}/admin/documents/all`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (!response.ok) {
         throw new Error("Unable to load documents");
       }
@@ -50,6 +55,15 @@ export default function AdminPage() {
     loadDocuments();
   }, []);
 
+  // protect page
+  const router = useRouter();
+  useEffect(() => {
+    const payload = getPayload();
+    if (!payload || payload.role !== 'ADMIN') {
+      router.replace('/login');
+    }
+  }, [router]);
+
   function handleStatusChange(id: string, newStatus: string) {
     setDocuments((current) =>
       current.map((doc) => (doc.id === id ? { ...doc, status: newStatus } : doc)),
@@ -60,10 +74,12 @@ export default function AdminPage() {
     setError("");
     setMessage("");
     try {
+      const token = getToken();
       const response = await fetch(`${API_BASE_URL}/admin/documents/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ document: { id: document.id, status: document.status } }),
       });

@@ -31,6 +31,10 @@ const Paths = {
       GetByDocument: '/document/:documentId',
     },
   },
+  Auth: {
+    _: '/auth',
+    Login: '/login',
+  }
 } as const;
 
 export const JetPaths = jetPaths(Paths);

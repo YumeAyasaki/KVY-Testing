@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getToken, getPayload } from "../lib/auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 const STATUSES = [
@@ -43,7 +45,10 @@ export default function SellerPage() {
     setMessage("");
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/documents/all`);
+      const token = getToken();
+      const response = await fetch(`${API_BASE_URL}/admin/documents/all`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (!response.ok) {
         throw new Error("Unable to load documents");
       }
@@ -72,9 +77,11 @@ export default function SellerPage() {
       formData.append("sellerId", sellerId.trim());
       formData.append("document", documentFile);
 
+      const token = getToken();
       const response = await fetch(`${API_BASE_URL}/admin/documents/add`, {
         method: "POST",
         body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
       if (!response.ok) {
@@ -94,6 +101,15 @@ export default function SellerPage() {
       setDocuments([]);
     }
   }, [sellerId]);
+
+  // protect page
+  const router = useRouter();
+  useEffect(() => {
+    const payload = getPayload();
+    if (!payload || payload.role !== 'SELLER') {
+      router.replace('/login');
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
