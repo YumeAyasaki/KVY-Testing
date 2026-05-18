@@ -4,6 +4,8 @@ import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 
 type Role = 'ADMIN' | 'SELLER';
 
+type AuthenticatedRequest = Request & { user?: Payload };
+
 export default function requireRole(required?: Role) {
   return function (req: Request, res: Response, next: NextFunction) {
     const header = req.headers['authorization'] || req.headers['Authorization'];
@@ -23,7 +25,7 @@ export default function requireRole(required?: Role) {
       return res.status(HttpStatusCodes.FORBIDDEN).json({ error: 'Forbidden' });
     }
     // attach user info
-    (req as any).user = payload as Payload;
+    (req as AuthenticatedRequest).user = payload;
     next();
   };
 }

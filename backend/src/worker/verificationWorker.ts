@@ -3,9 +3,21 @@ import VerificationAttemptRepo from '@src/repos/VerificationAttemptRepo';
 import DocumentRepo from '@src/repos/DocumentRepo';
 import EnvVars from '@src/common/constants/env';
 import logger from 'jet-logger';
+import { DocumentStatus } from '../../generated/prisma/client';
 
 const DEFAULT_MIN = 10000; // 10s
 const DEFAULT_MAX = 5 * 60 * 1000; // 5min
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getDocumentId(job: unknown): string | undefined {
+  const actualJob: unknown = Array.isArray(job) ? (job as unknown[])[0] : job;
+  if (!isRecord(actualJob)) return undefined;
+  const payload = isRecord(actualJob.data) ? actualJob.data : actualJob;
+  return typeof payload.documentId === 'string' ? payload.documentId : undefined;
+}
 
 function chooseOutcome(outcomes: string[]) {
   if (!outcomes || outcomes.length === 0) return 'INCONCLUSIVE';
@@ -19,9 +31,7 @@ export async function startVerificationWorker() {
   logger.info(`Starting verification worker with outcomes: ${outcomes.join(',')}`);
 
   await Queue.subscribeVerificationJob(async (job) => {
-    const actualJob = Array.isArray(job) ? job[0] : job;
-    const payload = actualJob && typeof actualJob === 'object' ? (actualJob.data ?? actualJob) : undefined;
-    const documentId = payload?.documentId as string | undefined;
+    const documentId = getDocumentId(job);
     if (!documentId) {
       const jobDump = (() => {
         try {
@@ -37,9 +47,9 @@ export async function startVerificationWorker() {
     try {
       const outcomeRaw = chooseOutcome(outcomes);
       const providerStatus = outcomeRaw.toLowerCase();
-      let docStatus: 'APPROVED' | 'REJECTED' | 'INCONCLUSIVE' = 'INCONCLUSIVE';
-      if (outcomeRaw === 'VERIFIED' || outcomeRaw === 'APPROVED') docStatus = 'APPROVED';
-      else if (outcomeRaw === 'DENIED' || outcomeRaw === 'REJECTED') docStatus = 'REJECTED';
+      let docStatus: DocumentStatus = DocumentStatus.INCONCLUSIVE;
+      if (outcomeRaw === 'VERIFIED' || outcomeRaw === 'APPROVED') docStatus = DocumentStatus.APPROVED;
+      else if (outcomeRaw === 'DENIED' || outcomeRaw === 'REJECTED') docStatus = DocumentStatus.REJECTED;
 
       await VerificationAttemptRepo.add({
         documentId,
@@ -48,13 +58,13 @@ export async function startVerificationWorker() {
         adminDecision: null,
         reason: `Automated provider: ${outcomeRaw}`,
       });
-      await DocumentRepo.update(documentId, { status: docStatus as any });
+      await DocumentRepo.update(documentId, { status: docStatus });
       logger.info(`Processed verification job for document ${documentId}: ${outcomeRaw}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       logger.err(`Verification worker failed for document ${documentId}: ${message}`);
       try {
-        await DocumentRepo.update(documentId, { status: 'INCONCLUSIVE' as any });
+        await DocumentRepo.update(documentId, { status: DocumentStatus.INCONCLUSIVE });
         logger.info(`Marked document ${documentId} INCONCLUSIVE after verification failure`);
       } catch (updateError) {
         const updateMessage = updateError instanceof Error ? updateError.message : String(updateError);

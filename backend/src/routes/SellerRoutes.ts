@@ -4,9 +4,13 @@ import { parseObject } from 'jet-validators/utils';
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 import SellerService from '@src/services/SellerService';
 import VerificationService from '@src/services/VerificationService';
+import { Payload } from '@src/common/utils/auth';
+import { DocumentStatus } from '../../generated/prisma/client';
 
 import { Req, Res } from './common/express-types';
 import parseReq from './common/parseReq';
+
+type AuthenticatedReq = Req & { user?: Payload };
 
 const sellerPayload = parseObject<{ email: string; companyName: string }>({
   email: isNonEmptyString,
@@ -35,7 +39,7 @@ async function getAll(_: Req, res: Res) {
 }
 
 async function getDocuments(req: Req, res: Res) {
-  const user = (req as any).user as { userId?: string } | undefined;
+  const user = (req as AuthenticatedReq).user;
   const userId = user?.userId;
   if (!userId) {
     return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Unauthorized' });
@@ -45,10 +49,9 @@ async function getDocuments(req: Req, res: Res) {
 }
 
 async function addDocument(req: Req, res: Res) {
-  const file = (req as Req & { file?: Express.Multer.File }).file;
-  const user = (req as any).user as { userId?: string } | undefined;
+  const file = (req as AuthenticatedReq & { file?: Express.Multer.File }).file;
+  const user = (req as AuthenticatedReq).user;
 
-  console.log(user);
   if (!user?.userId) {
     return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Unauthorized' });
   }

@@ -20,8 +20,8 @@ export async function publishVerificationJob(documentId: string) {
   return boss.sendAfter('document_verification', { documentId }, null, delay);
 }
 
-export async function subscribeVerificationJob(handler: (job: any) => Promise<void>) {
-  await boss.work('document_verification', async (jobs) => {
+export async function subscribeVerificationJob(handler: (job: unknown) => Promise<void>) {
+  await boss.work('document_verification', async (jobs: unknown) => {
     if (Array.isArray(jobs)) {
       for (const job of jobs) {
         await handler(job);

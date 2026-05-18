@@ -3,10 +3,13 @@ import { parseObject } from 'jet-validators/utils';
 
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 import VerificationService from '@src/services/VerificationService';
+import { Payload } from '@src/common/utils/auth';
 
 import { DocumentStatus } from '../../generated/prisma/client';
 import { Req, Res } from './common/express-types';
 import parseReq from './common/parseReq';
+
+type AuthenticatedReq = Req & { user?: Payload };
 
 function isDocumentStatus(value: unknown): value is DocumentStatus {
   return (
@@ -93,11 +96,8 @@ async function updateDocument(req: Req, res: Res) {
 }
 
 async function addDocument(req: Req, res: Res) {
-  const file = (req as Req & { file?: { filename: string } }).file;
-  const user = (req as any).user as {
-    userId?: string;
-    sellerId?: string;
-  } | undefined;
+  const file = (req as AuthenticatedReq & { file?: { filename: string } }).file;
+  const user = (req as AuthenticatedReq).user;
 
   if (!user || !user.userId) {
     return res

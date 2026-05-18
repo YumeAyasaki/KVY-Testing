@@ -16,19 +16,22 @@ const SERVER_START_MESSAGE =
                                   Run
 ******************************************************************************/
 
-// Start the server
-server.listen(EnvVars.Port, async (err) => {
-  if (!!err) {
-    logger.err(err.message);
-    return;
-  }
-
-  logger.info(SERVER_START_MESSAGE);
-
+async function startBackend() {
   try {
     await Queue.start();
     await startVerificationWorker();
   } catch (queueError) {
     logger.err(queueError as Error);
   }
+}
+
+// Start the server
+server.listen(EnvVars.Port, (err) => {
+  if (!!err) {
+    logger.err(err.message);
+    return;
+  }
+
+  logger.info(SERVER_START_MESSAGE);
+  void startBackend();
 });
