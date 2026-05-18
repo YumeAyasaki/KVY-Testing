@@ -7,10 +7,14 @@ type Role = 'ADMIN' | 'SELLER';
 export default function requireRole(required?: Role) {
   return function (req: Request, res: Response, next: NextFunction) {
     const header = req.headers['authorization'] || req.headers['Authorization'];
-    if (!header || typeof header !== 'string' || !header.startsWith('Bearer ')) {
+    if (!header || typeof header !== 'string') {
       return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization' });
     }
-    const token = header.split(' ')[1];
+    const parts = header.trim().split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Missing authorization' });
+    }
+    const token = parts[1].trim();
     const payload = verifyToken(token);
     if (!payload) {
       return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Invalid token' });

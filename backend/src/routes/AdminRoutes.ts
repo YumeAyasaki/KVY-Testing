@@ -93,21 +93,31 @@ async function updateDocument(req: Req, res: Res) {
 }
 
 async function addDocument(req: Req, res: Res) {
-  const body = req.body as { sellerId?: string };
   const file = (req as Req & { file?: { filename: string } }).file;
+  const user = (req as any).user as {
+    userId?: string;
+    sellerId?: string;
+  } | undefined;
 
-  if (!body.sellerId || !file) {
+  if (!user || !user.userId) {
+    return res
+      .status(HttpStatusCodes.UNAUTHORIZED)
+      .json({ error: 'Unauthorized' });
+  }
+
+  if (!file) {
     return res
       .status(HttpStatusCodes.BAD_REQUEST)
-      .json({ error: 'sellerId and file are required' });
+      .json({ error: 'file is required' });
   }
 
   const fileUrl = `/uploads/${file.filename}`;
+  const sellerId = (user.sellerId || user.userId).trim();
 
   await VerificationService.addDocument({
-    sellerId: body.sellerId.trim(),
+    sellerId,
     fileUrl,
-    status: DocumentStatus.SUBMITTED,
+    status: DocumentStatus.PENDING_VERIFICATION,
   });
 
   res.status(HttpStatusCodes.CREATED).json({ fileUrl });

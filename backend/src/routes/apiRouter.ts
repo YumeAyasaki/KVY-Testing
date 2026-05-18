@@ -44,7 +44,19 @@ sellerRouter.post(Paths.Sellers.Add, SellerRoutes.add);
 sellerRouter.put(Paths.Sellers.Update, SellerRoutes.update);
 sellerRouter.delete(Paths.Sellers.Delete, SellerRoutes.delete);
 
+const sellerDocsRouter = Router();
+sellerDocsRouter.use(requireRole('SELLER')); // Isolated safely under /api/sellers/documents
+sellerDocsRouter.get(Paths.Sellers.Documents.Get, SellerRoutes.getDocuments);
+sellerDocsRouter.post(
+  Paths.Sellers.Documents.Add,
+  upload.single('document'),
+  SellerRoutes.addDocument,
+);
+sellerRouter.use(JetPaths.Sellers.Documents._, sellerDocsRouter);
+
+
 apiRouter.use(JetPaths.Sellers._, sellerRouter);
+apiRouter.use(JetPaths.Sellers.Documents._, sellerDocsRouter);
 
 
 // ----------------------- Add AdminRouter -------------------------------- //
@@ -52,7 +64,14 @@ const adminRouter = Router();
 
 adminRouter.get(Paths.Admin.Documents.Get, AdminRoutes.getAllDocuments);
 adminRouter.get(Paths.Admin.Documents.GetById, AdminRoutes.getDocumentById);
-adminRouter.post(Paths.Admin.Documents.Add, upload.single('document'), AdminRoutes.addDocument);
+// Require a valid token (any role) for document uploads so we can attach the
+// current user to the uploaded document.
+adminRouter.post(
+  Paths.Admin.Documents.Add,
+  requireRole(),
+  upload.single('document'),
+  AdminRoutes.addDocument,
+);
 adminRouter.put(Paths.Admin.Documents.Update, requireRole('ADMIN'), AdminRoutes.updateDocument);
 
 adminRouter.post(Paths.Admin.Attempts.Add, requireRole('ADMIN'), AdminRoutes.addVerificationAttempt);

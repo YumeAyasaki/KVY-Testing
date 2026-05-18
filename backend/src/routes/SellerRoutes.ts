@@ -3,6 +3,7 @@ import { parseObject } from 'jet-validators/utils';
 
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 import SellerService from '@src/services/SellerService';
+import VerificationService from '@src/services/VerificationService';
 
 import { Req, Res } from './common/express-types';
 import parseReq from './common/parseReq';
@@ -33,6 +34,40 @@ async function getAll(_: Req, res: Res) {
   res.status(HttpStatusCodes.OK).json({ sellers });
 }
 
+async function getDocuments(req: Req, res: Res) {
+  const user = (req as any).user as { userId?: string } | undefined;
+  const userId = user?.userId;
+  if (!userId) {
+    return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Unauthorized' });
+  }
+  const documents = await VerificationService.getDocumentsBySellerId(userId);
+  res.status(HttpStatusCodes.OK).json({ documents });
+}
+
+async function addDocument(req: Req, res: Res) {
+  const file = (req as Req & { file?: Express.Multer.File }).file;
+  const user = (req as any).user as { userId?: string } | undefined;
+
+  console.log(user);
+  if (!user?.userId) {
+    return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Unauthorized' });
+  }
+
+  if (!file) {
+    return res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'file is required' });
+  }
+
+  const fileUrl = `/uploads/${file.filename}`;
+
+  await VerificationService.addDocument({
+    sellerId: user.userId.trim(),
+    fileUrl,
+    status: 'PENDING_VERIFICATION',
+  });
+
+  res.status(HttpStatusCodes.CREATED).json({ fileUrl });
+}
+
 async function add(req: Req, res: Res) {
   const { seller } = reqValidators.add(req.body) as {
     seller: { email: string; companyName: string };
@@ -61,4 +96,6 @@ export default {
   add,
   update,
   delete: delete_,
+  getDocuments,
+  addDocument,
 } as const;

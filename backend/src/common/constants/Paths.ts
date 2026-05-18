@@ -15,6 +15,11 @@ const Paths = {
     Add: '/add',
     Update: '/update',
     Delete: '/delete/:id',
+    Documents: {
+      _: '/documents',
+      Get: '/all',
+      Add: '/add',
+    },
   },
   Admin: {
     _: '/admin',

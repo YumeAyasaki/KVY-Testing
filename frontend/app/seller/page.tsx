@@ -25,20 +25,19 @@ type Document = {
 };
 
 export default function SellerPage() {
-  const [sellerId, setSellerId] = useState("");
+  const payload = getPayload();
+  const sellerId = payload?.sellerId || payload?.userId || '';
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const filteredDocuments = sellerId
-    ? documents.filter((doc) => doc.sellerId === sellerId.trim())
-    : [];
+  const filteredDocuments = documents;
 
   async function loadDocuments() {
     if (!sellerId.trim()) {
-      setError("Enter a seller ID to load your documents.");
+      setError('Unable to find seller identity. Please log in again.');
       return;
     }
     setError("");
@@ -46,7 +45,7 @@ export default function SellerPage() {
     setLoading(true);
     try {
       const token = getToken();
-      const response = await fetch(`${API_BASE_URL}/admin/documents/all`, {
+      const response = await fetch(`${API_BASE_URL}/sellers/documents/all`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!response.ok) {
@@ -67,18 +66,17 @@ export default function SellerPage() {
     setError("");
     setMessage("");
 
-    if (!sellerId.trim() || !documentFile) {
-      setError("Seller ID and document file are required.");
+    if (!documentFile) {
+      setError('Document file is required.');
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append("sellerId", sellerId.trim());
       formData.append("document", documentFile);
 
       const token = getToken();
-      const response = await fetch(`${API_BASE_URL}/admin/documents/add`, {
+      const response = await fetch(`${API_BASE_URL}/sellers/documents/add`, {
         method: "POST",
         body: formData,
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -135,17 +133,14 @@ export default function SellerPage() {
         <section className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           <div className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-2xl font-semibold">Upload document</h2>
-            <p className="mt-2 text-slate-600">Provide your seller ID and a file to submit for verification.</p>
+            <p className="mt-2 text-slate-600">Your seller identity is loaded from your login. Upload a document to submit for verification.</p>
             <form className="mt-6 space-y-5" onSubmit={handleUpload}>
-              <label className="block space-y-2 text-sm text-slate-700">
+              <div className="block space-y-2 text-sm text-slate-700">
                 <span>Seller ID</span>
-                <input
-                  value={sellerId}
-                  onChange={(event) => setSellerId(event.target.value)}
-                  placeholder="Enter seller ID"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-500"
-                />
-              </label>
+                <div className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700">
+                  {sellerId || 'Not available'}
+                </div>
+              </div>
               <label className="block space-y-2 text-sm text-slate-700">
                 <span>Document file</span>
                 <input

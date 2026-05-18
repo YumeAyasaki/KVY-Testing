@@ -1,5 +1,6 @@
 import { Req, Res } from './common/express-types';
 import UserRepo from '@src/repos/UserRepo';
+import SellerRepo from '@src/repos/SellerRepo';
 import HttpStatusCodes from '@src/common/constants/HttpStatusCodes';
 import { signToken } from '@src/common/utils/auth';
 
@@ -19,7 +20,19 @@ async function login(req: Req, res: Res) {
     return res.status(HttpStatusCodes.UNAUTHORIZED).json({ error: 'Invalid credentials' });
   }
 
-  const token = signToken({ userId: user.id, role: user.Role });
+  const tokenPayload: { userId: string; role: typeof user.Role; sellerId?: string } = {
+    userId: user.id,
+    role: user.Role,
+  };
+
+  if (user.Role === 'SELLER') {
+    const seller = await SellerRepo.getByEmail(user.username.trim());
+    if (seller) {
+      tokenPayload.sellerId = seller.id;
+    }
+  }
+
+  const token = signToken(tokenPayload);
   res.status(HttpStatusCodes.OK).json({ token, role: user.Role });
 }
 

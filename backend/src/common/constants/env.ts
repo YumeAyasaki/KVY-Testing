@@ -19,6 +19,9 @@ export const NodeEnvs = {
 const EnvVars = jetEnv({
   NodeEnv: (v) => tspo.isValue(NodeEnvs, v),
   Port: num,
+  VerificationMinDelayMs: num,
+  VerificationMaxDelayMs: num,
+  VerificationOutcomes: (v) => typeof v === 'string' || typeof v === 'undefined',
 });
 
 /******************************************************************************

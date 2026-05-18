@@ -2,6 +2,7 @@ import DocumentRepo, { DocumentCreateInput, DocumentUpdateInput } from '@src/rep
 import VerificationAttemptRepo, {
   VerificationAttemptCreateInput,
 } from '@src/repos/VerificationAttemptRepo';
+import Queue from '@src/common/pgBoss';
 
 async function getAllDocuments() {
   return DocumentRepo.getAll();
@@ -16,7 +17,15 @@ async function updateDocument(id: string, data: DocumentUpdateInput) {
 }
 
 async function addDocument(data: DocumentCreateInput) {
-  return DocumentRepo.add(data);
+  const document = await DocumentRepo.add(data);
+
+  await Queue.publishVerificationJob(document.id);
+
+  return document;
+}
+
+async function getDocumentsBySellerId(sellerId: string) {
+  return DocumentRepo.getBySellerId(sellerId);
 }
 
 async function addVerificationAttempt(data: VerificationAttemptCreateInput) {
@@ -34,4 +43,5 @@ export default {
   addDocument,
   addVerificationAttempt,
   getAttemptsByDocument,
+  getDocumentsBySellerId,
 } as const;
