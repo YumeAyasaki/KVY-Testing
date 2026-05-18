@@ -10,7 +10,7 @@
     "dev": "concurrently \"npm run dev:watch\" \"npm run sync\"",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "start": "node -r module-alias/register ./dist/src/main.js",
+    "start": "cross-env DOTENV_CONFIG_PATH=./config/.env.production node -r dotenv/config -r module-alias/register ./dist/src/main.js",
     "sync": "delay 1s && browser-sync start --config bs-config.js",
     "test": "cross-env NODE_ENV=test vitest",
     "type-check": "tsc -b --noEmit"
@@ -45,6 +45,9 @@
     "shx": "^0.4.0",
     "typescript": "^6.0.3",
     "prisma": "^7.8.0",
+    "ts-node": "^10.9.2",
+    "jiti": "^2.7.0",
+    "tsconfig-paths": "^4.2.0",
     "tspo": "^1.0.7"
   },
   "devDependencies": {
