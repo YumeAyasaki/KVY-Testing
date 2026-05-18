@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "0.0.0",
   "scripts": {
-    "build": "npx prisma generate && shx rm -rf dist && npm run lint && tsc --project tsconfig.prod.json && npm run build:copy-static",
+    "build": "shx rm -rf dist && npm run lint && tsc --project tsconfig.prod.json && npm run build:copy-static && npx prisma generate",
     "build:copy-static": "shx mkdir -p dist/public dist/views && shx cp -r src/public/* dist/public",
     "clean-install": "rm -rf ./node_modules && rm -r package-lock.json && npm i",
     "dev:basic": "cross-env DOTENV_CONFIG_PATH=./config/.env.development ts-node ./src/main",
