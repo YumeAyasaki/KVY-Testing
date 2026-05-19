@@ -60,24 +60,25 @@ apiRouter.use(JetPaths.Sellers.Documents._, sellerDocsRouter);
 
 
 // ----------------------- Add AdminRouter -------------------------------- //
-const adminRouter = Router();
-
-adminRouter.get(Paths.Admin.Documents.Get, AdminRoutes.getAllDocuments);
-adminRouter.get(Paths.Admin.Documents.GetById, AdminRoutes.getDocumentById);
+const adminDocsRouter = Router();
+adminDocsRouter.get(Paths.Admin.Documents.Get, AdminRoutes.getAllDocuments);
+adminDocsRouter.get(Paths.Admin.Documents.GetById, AdminRoutes.getDocumentById);
 // Require a valid token (any role) for document uploads so we can attach the
 // current user to the uploaded document.
-adminRouter.post(
+adminDocsRouter.post(
   Paths.Admin.Documents.Add,
   requireRole(),
   upload.single('document'),
   AdminRoutes.addDocument,
 );
-adminRouter.put(Paths.Admin.Documents.Update, requireRole('ADMIN'), AdminRoutes.updateDocument);
+adminDocsRouter.put(Paths.Admin.Documents.Update, requireRole('ADMIN'), AdminRoutes.updateDocument);
 
-adminRouter.post(Paths.Admin.Attempts.Add, requireRole('ADMIN'), AdminRoutes.addVerificationAttempt);
-adminRouter.get(Paths.Admin.Attempts.GetByDocument, requireRole('ADMIN'), AdminRoutes.getAttemptsByDocument);
+const attemptsRouter = Router();
+attemptsRouter.post(Paths.Admin.Attempts.Add, requireRole('ADMIN'), AdminRoutes.addVerificationAttempt);
+attemptsRouter.get(Paths.Admin.Attempts.GetByDocument, requireRole('ADMIN'), AdminRoutes.getAttemptsByDocument);
 
-apiRouter.use(JetPaths.Admin._, adminRouter);
+apiRouter.use(JetPaths.Admin.Documents._, adminDocsRouter);
+apiRouter.use(JetPaths.Admin.Attempts._, attemptsRouter);
 
 
 // ----------------------- Add AuthRouter -------------------------------- //
