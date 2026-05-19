@@ -111,4 +111,7 @@ Then login with:
 
 ## Deployment
 
-No production deployment URL is available from this repository at the moment.
+Frontend: https://kvy-testing.vercel.app/
+Testing credentials:
+- Admin: `admin` / `123`
+- Seller: `seller` / `123`
